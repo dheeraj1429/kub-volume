@@ -1,0 +1,12 @@
+version: "3.8"
+services:
+  kub-volume:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    volumes:
+      - "story:/app/story"
+volumes:
+  story:

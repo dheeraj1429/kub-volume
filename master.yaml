@@ -1,0 +1,65 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: host-pv
+spec:
+  capacity:
+    storage: 1Gi
+  volumeMode: Filesystem
+  storageClassName: standard
+  accessModes:
+  - ReadWriteOnce
+  hostPath:
+    path: /cache
+    type: DirectoryOrCreate
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: host-pvc
+spec:
+  volumeName: host-pv
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: standard
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kub-service
+spec:
+  type: LoadBalancer
+  selector:
+    name: kub-deployment
+  ports:
+  - protocol: "TCP"
+    port: 80
+    targetPort: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kub-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      name: kub-deployment
+  template:
+    metadata:
+      labels:
+        name: kub-deployment
+    spec:
+      containers:
+      - name: kub-deployment
+        image: dheeraj1429/kub-volumne:0.1
+        volumeMounts:
+        - mountPath: /app/story
+          name: cache-volume
+      volumes:
+      - name: cache-volume
+        persistentVolumeClaim:
+          claimName: host-pvc
